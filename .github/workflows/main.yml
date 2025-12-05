@@ -20,6 +20,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: true
+          submodules: recursive
           token: ${{ secrets.RELEASE_PLZ_TOKEN }}
       - &install-rust
         name: Install Rust toolchain
