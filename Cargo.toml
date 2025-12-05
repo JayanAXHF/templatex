@@ -8,8 +8,8 @@ license = "Unlicense OR MIT"
 homepage = "https://github.com/JayanAXHF/templatex"
 repository = "https://github.com/JayanAXHF/templatex"
 readme = "README.md"
-keywords = ["latex", "tectonic", "template", "manager", "cli", "tui"]
-categories = ["command-line-utilities", "command-line-interface", "latex"]
+keywords = ["utility", "template", "manager", "cli", "tui"]
+categories = ["command-line-utilities", "command-line-interface", "template-engine"]
 
 [dependencies]
 clap = { version = "4.5.53", features = ["derive"] }
