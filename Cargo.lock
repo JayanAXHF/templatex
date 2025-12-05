@@ -2002,7 +2002,6 @@ dependencies = [
  "directories",
  "getset",
  "glob",
- "globset",
  "inquire",
  "rat-ftable",
  "rat-salsa",

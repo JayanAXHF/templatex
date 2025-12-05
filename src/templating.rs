@@ -7,14 +7,13 @@ use getset::{CloneGetters, CopyGetters, Getters, MutGetters, Setters, WithSetter
 use glob::glob;
 use serde::Deserialize;
 use std::{
-    collections::HashMap,
     fs,
-    io::{self, Read, Write},
+    io::{self, Write},
     path::{Path, PathBuf},
     sync::LazyLock,
 };
 use tera::ast;
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 pub static FILE_FILTER: LazyLock<Filter<&str>> = LazyLock::new(|| {
     Filter::<&str>::with_filter(vec![
@@ -32,7 +31,7 @@ pub static FILE_FILTER: LazyLock<Filter<&str>> = LazyLock::new(|| {
         "snm",
         "vrb",
         "xdv",
-        "pdf", // optional: remove this if you want PDFs included
+        "pdf",
         "tmp",
         "bak",
     ])
@@ -46,8 +45,9 @@ pub static IMAGE_FILTER: LazyLock<Filter<&str>> = LazyLock::new(|| {
 });
 
 #[derive(Debug, Getters, Setters, WithSetters, MutGetters, CopyGetters, CloneGetters, Builder)]
-#[builder(build_fn(skip, validate = "Self::validate"))]
+#[builder(build_fn(skip))]
 pub struct Engine {
+    #[allow(dead_code)]
     #[builder(setter(into))]
     template_dirs: Vec<PathBuf>,
     #[builder(setter(skip))]
@@ -71,15 +71,6 @@ pub struct TemplateFile {
 }
 
 impl EngineBuilder {
-    fn validate(&self) -> Result<()> {
-        if self.template_dirs.is_none() {
-            return Err(Error::Other(color_eyre::eyre::eyre!(
-                "No template directories provided"
-            )));
-        }
-        Ok(())
-    }
-
     pub fn build(self) -> Result<Engine> {
         let Some(template_dirs) = self.template_dirs else {
             return Err(Error::Other(color_eyre::eyre::eyre!(
@@ -106,9 +97,7 @@ impl EngineBuilder {
                 Some((f, Some(sf)))
             }))?;
             tera.build_inheritance_chains()?;
-            info!("{:?}", tera);
             tera.autoescape_on(vec![".tex"]);
-            info!(filter= ?*FILE_FILTER);
             for template in tera.get_template_names() {
                 let mut variables = Vec::new();
                 for node in tera.get_template(template).unwrap().ast.clone() {
@@ -173,11 +162,11 @@ impl Engine {
             if FILE_FILTER.filter(f) {
                 continue;
             }
-            info!(prefix = ?prefix.display(), out_dir = ?out_dir.display(),src_dir = ?out_dir.join("src").display(), "Creating directory");
+            debug!(prefix = ?prefix.display(), out_dir = ?out_dir.display(),src_dir = ?out_dir.join("src").display(), "Creating directory");
             let mut file = std::fs::File::create(out_dir.join("src").join(f))?;
             info!("Rendering {}", f);
             let render_result = template.tera.render(f, &context);
-            info!(render_result = ?render_result, "Rendered");
+            debug!(render_result = ?render_result, "Rendered");
             let Ok(rendered) = render_result else {
                 tracing::error!(
                     "Failed to render template {}: {}",
@@ -260,8 +249,6 @@ impl LoadableDir for PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use globset::{Glob, GlobBuilder, GlobSetBuilder};
-
     use super::*;
     #[test]
     fn test() {
@@ -271,13 +258,5 @@ mod tests {
             .build()
             .unwrap();
         // println!("{:#?}", engine.templates);
-    }
-    #[test]
-    fn test_glob() {
-        let mut builder = GlobSetBuilder::new();
-        builder.add(Glob::new("**/*.!{tex}").unwrap());
-        let set = builder.build().unwrap();
-        let matches = set.matches_all("foo.tex");
-        assert!(!matches);
     }
 }

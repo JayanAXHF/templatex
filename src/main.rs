@@ -49,7 +49,11 @@ fn main() -> color_eyre::Result<()> {
         .map(PathBuf::load_dir)
         .collect::<Result<Vec<_>>>()?;
 
-    let sel = picker(loaded_templates)?;
+    let sel = if loaded_templates.len() == 1 {
+        loaded_templates[0].clone()
+    } else {
+        picker(loaded_templates)?
+    };
 
     let engine = templating::EngineBuilder::default()
         .template_dirs([sel.dir])
