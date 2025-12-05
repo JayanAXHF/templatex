@@ -17,7 +17,7 @@ A simple yet powerful template manager for Tectonic LaTeX projects.
 Install `templatex` using Cargo:
 
 ```sh
-cargo install templatex
+cargo install --locked templatex
 ```
 
 ## Usage
