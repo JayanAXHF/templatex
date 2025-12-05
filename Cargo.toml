@@ -1,6 +1,6 @@
 [package]
 name = "templatex"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "A powerful, easy to use template manager for LaTeX with Tectonic"
 authors = ["JayanAXHF <sunil.chdry@gmail.com>"]
