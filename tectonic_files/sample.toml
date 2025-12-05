@@ -1,0 +1,79 @@
+[doc]
+name = "<{name}>"
+
+# A string identifying the location of the “bundle” of TeX support files
+# underlying the processing of the document. The `tectonic -X new` command
+# will populate this field with the current recommended default.
+#
+# This field should be a URL (a `.ttb` on the web, or a legacy indexed tar bundle),
+# or a file on your computer (a `.ttb` or a legacy `.zip` bundle).
+bundle = "https://data1.fullyjustified.net/tlextras-2022.0r0.tar"
+
+# Extra search paths for TeX sources, images, etc.
+#
+# This is particularly useful if you have files used
+# by multiple Tectonic documents. For example:
+#
+# repo-root/
+#  ├── resources/
+#  │   └── classes, images, other shared resources
+#  ├── doc1/
+#  │   ├── src/
+#  │   └── Tectonic.toml  <-- Contains `extra_paths = ["../resources"]`
+#  └── doc2/
+#      ├── src/
+#      └── Tectonic.toml  <-- Contains `extra_paths = ["../resources"]`
+
+
+# One (of possibly many) output specifications.
+[[output]]
+
+# This output's name. By default, build products for each output will be
+# placed in the build directory under subdirectory with this name.
+name = "main"
+
+# The output's type. Right now, only "pdf" is valid.
+type = "pdf"
+
+# The TeX "format" of preloaded macros to use when compiling the document.
+# This is optional, with a default of "latex" (which corresponds to the
+# standard LaTeX format). The exact set of formats that are supported will
+# depend on the bundle that is being used.
+tex_format = "latex"
+
+# Whether the TeX “shell escape”, AKA `\write18`, mechanism is allowed.
+# This is optional and defaults to false.
+#
+# Shell-escape is insecure, since it give the document access to your shell.
+# It also is non-portable, because it requires your document to be built
+# is run in an environment where a shell exists.
+# Naturally, its use is strongly discouraged, but some packages depend on
+# this feature.
+shell_escape = false
+
+# The working directory path to use for “shell escape”. The default is a
+# temporary directory if `output.shell_escape` is true, else it's disabled.
+# The path can be absolute or relative to the root file, but it must exist.
+# Specifying this path automatically sets `output.shell_escape` to true.
+# This is optional, and defaults to a temporary directory.
+shell_escape_cwd = "string"
+
+# Whether the synctex files will be created. This is optional and defaults to false.
+synctex = true
+
+# The input file we'll use to build this document,
+# Given as a path relative to the `./src` directory.
+#
+# This may also be an array of file paths,
+# the contents of which are concatenated while building.
+# You could, for example, define:
+# inputs = ["preamble.tex", "main.tex"]
+#
+# Finally, you may include an "inline" document as follows:
+# inputs = [
+#   {{ inline = "\\documentclass[a4paper]{{article}}" }},
+#   "main.tex"
+# ]
+# This will insert "\documentclass[a4paper]{{article}}" before main.tex
+# (with a newline), allowing you to set options without making a new file.
+inputs = "main.tex"
