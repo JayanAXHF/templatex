@@ -26,7 +26,7 @@ use std::time::{Duration, SystemTime};
 
 pub fn picker(dirs: Vec<LoadedTemplateDir>) -> Result<LoadedTemplateDir, Error> {
     let config = Config::default();
-    let theme = create_theme("Imperial Dark");
+    let theme = create_theme("Imperial Shell");
     let mut global = Global::new(config, theme);
     let ui = Minimal {
         dirs: dirs.clone(),
