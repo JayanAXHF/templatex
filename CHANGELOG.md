@@ -20,6 +20,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - committed patches
 ## [unreleased]
 
+## [0.2.0](https://github.com/JayanAXHF/templatex/compare/v0.1.2...v0.2.0) - 2025-12-06
+
+### Added
+
+- Added support for copying over image files from the template
+- feat!(template): Changed template syntax to `<~{ ... }~>` to avoid latex weirdness
+- *(TUI)* Added template search
+
+### Fixed
+
+- Updated README and sample TOML file with new syntax
+
+### Other
+
+- [**breaking**] Updated TUI state to use get_dirs() helper method instead of direct access
+
 ## [0.1.2](https://github.com/JayanAXHF/templatex/compare/v0.1.1...v0.1.2) - 2025-12-05
 
 ### Fixed
