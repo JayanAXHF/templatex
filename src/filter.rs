@@ -25,6 +25,12 @@ impl<F: FilterFn> Filter<F> {
         filters.push(filter);
         Self { filter: filters }
     }
+    pub fn replace_filter(&mut self, filter: Vec<F>) {
+        self.filter = filter;
+    }
+    pub fn get_filter(&self) -> &Vec<F> {
+        &self.filter
+    }
 }
 
 impl<F: FilterFn> FilterFn for Filter<F> {
