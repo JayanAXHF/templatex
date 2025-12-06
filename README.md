@@ -117,7 +117,7 @@ If this file is not present, the directory name (`basic-article`) will be used a
 
 ### Template Variables
 
-Files inside the `src/` directory are processed by the Tera templating engine. You can use `<{ variable_name }>` syntax to define placeholders that `templatex` will prompt you to fill in.
+Files inside the `src/` directory are processed by the Tera templating engine. You can use `<~{ variable_name }~>` syntax to define placeholders that `templatex` will prompt you to fill in.
 
 Example `main.tex`:
 
@@ -127,9 +127,9 @@ Example `main.tex`:
 
 \input{preamble.tex}
 
-\title{ <{ title }> }
-\author{ <{ author }> }
-\date{ <{ date }> }
+\title{ <~{ title }~> }
+\author{ <~{ author }~> }
+\date{ <~{ date }~> }
 
 \begin{document}
 

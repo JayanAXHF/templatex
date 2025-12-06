@@ -1,5 +1,5 @@
 [doc]
-name = "<{name}>"
+name = "<~{name}~>"
 
 # A string identifying the location of the “bundle” of TeX support files
 # underlying the processing of the document. The `tectonic -X new` command
