@@ -22,6 +22,18 @@ use ratatui::widgets::StatefulWidget;
 pub struct Minimal {
     pub dirs: Vec<LoadedTemplateDir>,
     pub table: TableState<RowSelection>,
+impl Minimal {
+    pub fn get_dirs(&self) -> Vec<LoadedTemplateDir> {
+        let f = self.filter.clone();
+        if f.get_filter().is_empty() {
+            return self.dirs.clone();
+        }
+        self.dirs
+            .iter()
+            .filter(|d| f.filter(d.name.clone()))
+            .cloned()
+            .collect::<Vec<_>>()
+    }
 }
 
 pub fn render(
@@ -31,6 +43,7 @@ pub fn render(
     ctx: &mut Global,
 ) -> Result<(), Error> {
     let data = DataSlice(&state.dirs);
+    let data = DataSlice(&state.get_dirs());
     let table = Table::<RowSelection>::new()
         .data(data)
         .column_spacing(1)

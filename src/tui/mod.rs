@@ -48,6 +48,7 @@ pub fn picker(dirs: Vec<LoadedTemplateDir>) -> Result<LoadedTemplateDir, Error> 
             .poll(PollCrossterm)
             .poll(PollRendered),
     )?;
+    let dirs = state.ui.get_dirs();
     let template = state
         .ui
         .table
