@@ -1,44 +1,50 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [0.2.0] - 2025-12-06
 
-### 🚀 Features
+### Features
+- *(TUI)* Added template search (by @JayanAXHF)
+- Added support for copying over image files from the template (by @JayanAXHF)
 
-- *(TUI)* Added template search
-- Added support for copying over image files from the template
 
-### 🐛 Bug Fixes
+### Bug Fixes
+- Updated README and sample TOML file with new syntax (by @JayanAXHF)
 
-- Updated README and sample TOML file with new syntax
 
-### 🚜 Refactor
+### Refactor
+- [**breaking**] Updated TUI state to use get_dirs() helper method instead of direct access (by @JayanAXHF)
 
-- [**breaking**] Updated TUI state to use get_dirs() helper method instead of direct access
 
-### ⚙️ Miscellaneous Tasks
+### Miscellaneous Tasks
+- release v0.2.0 (by @JayanAXHF)
 
-- Release v0.2.0
 ## [0.1.2] - 2025-12-05
 
-### 🐛 Bug Fixes
+### Bug Fixes
+- *(README)* Fixed the variable syntax description in the README (by @JayanAXHF)
 
-- *(README)* Fixed the variable syntax description in the README
 
-### ⚙️ Miscellaneous Tasks
+### Miscellaneous Tasks
+- release v0.1.2 (by @JayanAXHF)
 
-- Release v0.1.2
 ## [0.1.1] - 2025-12-05
 
-### 🚀 Features
+### Features
+- finished initial POC (by @JayanAXHF)
+- Added README (by @JayanAXHF)
 
-- Finished initial POC
-- Added README
 
-### 🐛 Bug Fixes
+### Bug Fixes
+- removed extra tag (by @JayanAXHF)
+- added `--locked` to install command (by @JayanAXHF)
 
-- Removed extra tag
-- Added `--locked` to install command
 
-### ⚙️ Miscellaneous Tasks
+### Miscellaneous Tasks
+- added changelog and added optimisations (by @JayanAXHF)
+- Added metadata to Cargo.toml (by @JayanAXHF)
+- release v0.1.1 (by @JayanAXHF)
 
-- Added changelog and added optimisations
-- Added metadata to Cargo.toml
-- Release v0.1.1
