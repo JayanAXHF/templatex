@@ -40,7 +40,7 @@ pub static FILE_FILTER: LazyLock<Filter<&str>> = LazyLock::new(|| {
 pub static IMAGE_FILTER: LazyLock<Filter<&str>> = LazyLock::new(|| {
     Filter::<&str>::with_filter(vec![
         "png", "jpg", "jpeg", "gif", "svg", "bmp", "webp", "ico", "tif", "tiff", "eps", "ps", "ai",
-        "raw", "xcf",
+        "raw", "xcf", "pdf",
     ])
 });
 
@@ -61,6 +61,7 @@ pub struct Template {
     name: String,
     dir: PathBuf,
     files: Vec<TemplateFile>,
+    image_files: Vec<PathBuf>,
 }
 
 #[derive(Debug, Getters, Setters, WithSetters, MutGetters, CopyGetters, CloneGetters, Clone)]
@@ -81,12 +82,17 @@ impl EngineBuilder {
         for dir in template_dirs.clone() {
             let mut files = Vec::new();
             let glob = glob(&dir.join("**/*").display().to_string())?.filter_map(|e| e.ok());
+            let mut image_files = Vec::new();
             let glob = glob.filter(|f| {
                 let Some(ext) = f.extension() else {
                     return false;
                 };
                 let ext = ext.display().to_string();
                 let ext = ext.as_str();
+                if IMAGE_FILTER.filter(ext) {
+                    image_files.push(f.clone());
+                    return false;
+                }
                 !(FILE_FILTER.filter(ext) || IMAGE_FILTER.filter(ext))
             });
             let mut tera = tera::Tera::default();
@@ -117,6 +123,7 @@ impl EngineBuilder {
                 name: dir.file_name().unwrap().to_str().unwrap().to_string(),
                 dir,
                 files,
+                image_files,
             });
         }
         Ok(Engine {
@@ -148,6 +155,23 @@ impl Engine {
         let mut context = tera::Context::new();
         for (k, v) in data {
             context.insert(k, &v);
+        }
+        let template_source_dir = template.dir();
+        for f in template.image_files() {
+            let output_file = out_dir
+                .join("src")
+                .join(f.strip_prefix(&template_source_dir).unwrap());
+            info!("Rendering {}", output_file.display());
+            let Some(prefix) = output_file.parent() else {
+                warn!("Failed to get parent of {}", output_file.display());
+                continue;
+            };
+
+            std::fs::create_dir_all(prefix)?;
+            std::fs::create_dir_all(out_dir.join("src"))?;
+            debug!(prefix = ?prefix.display(), out_dir = ?out_dir.display(),src_dir = ?out_dir.join("src").display(), "Creating directory");
+            //std::fs::File::create(&output_file)?;
+            std::fs::copy(f, output_file)?;
         }
         for f in template.tera.get_template_names() {
             let output_file = out_dir.join("src").join(f);
