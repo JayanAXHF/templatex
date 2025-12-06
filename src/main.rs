@@ -54,6 +54,7 @@ fn main() -> color_eyre::Result<()> {
     } else {
         picker(loaded_templates)?
     };
+    println!("\r\n");
 
     let engine = templating::EngineBuilder::default()
         .template_dirs([sel.dir])
