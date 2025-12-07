@@ -24,11 +24,11 @@ impl<'a> rat_ftable::TableData<'a> for DataSlice<'a> {
                     span.render(area, buf);
                 }
                 1 => {
-                    let span = Span::from(&d.name).blue();
+                    let span = Span::from(d.name()).blue();
                     span.render(area, buf);
                 }
                 2 => {
-                    if let Some(desc) = d.description.as_ref() {
+                    if let Some(desc) = d.description() {
                         let span = Span::from(desc);
                         span.render(area, buf);
                     }

@@ -1,14 +1,15 @@
 use std::path::PathBuf;
 
 use clap::Parser;
+use ratatui::crossterm::terminal::disable_raw_mode;
 use templatex::{
     cli, config,
-    errors::Result,
+    filter::Filter,
     logging::init,
     templating::{self, LoadableDir},
     tui::picker,
 };
-use tracing::level_filters::LevelFilter;
+use tracing::{debug, level_filters::LevelFilter};
 
 fn main() -> color_eyre::Result<()> {
     let cli::Cli { name, args } = cli::Cli::parse();
@@ -46,8 +47,18 @@ fn main() -> color_eyre::Result<()> {
 
     let loaded_templates = template_dirs
         .iter()
-        .map(PathBuf::load_dir)
-        .collect::<Result<Vec<_>>>()?;
+        .filter_map(|p| {
+            let p = p.load_dir();
+            let Ok(p) = p else {
+                let e = p.unwrap_err();
+                tracing::error!("Failed to load template dir: {}", e);
+                return None;
+            };
+            debug!("Loaded template dir: {:?}", p);
+
+            if p.config.ignore { None } else { Some(p) }
+        })
+        .collect::<Vec<_>>();
 
     let sel = if loaded_templates.len() == 1 {
         loaded_templates[0].clone()
@@ -55,14 +66,29 @@ fn main() -> color_eyre::Result<()> {
         let theme = config.get_theme();
         picker(loaded_templates, theme)?
     };
+    disable_raw_mode()?;
     println!("\r\n");
+    let include_filters = sel
+        .config
+        .include
+        .as_ref()
+        .map(Filter::<String>::with_filter);
+
+    let exclude_filters = sel
+        .config
+        .exclude
+        .as_ref()
+        .map(Filter::<String>::with_filter);
 
     let engine = templating::EngineBuilder::default()
-        .template_dirs([sel.dir])
+        .include_filters(include_filters)
+        .exclude_filters(exclude_filters)
+        .template_dirs([sel.dir().clone()])
         .clone()
         .build()?;
 
-    let template = engine.get_template(sel.name.as_str()).unwrap();
+    let t_name = &sel.dir().file_name().unwrap().display().to_string();
+    let template = engine.get_template(t_name).unwrap();
     let vars = template
         .files()
         .iter()
@@ -72,14 +98,14 @@ fn main() -> color_eyre::Result<()> {
     let data = vars
         .iter()
         .map(|v| {
-            let prompt = inquire::prompt_text(format!("Enter value for {}", v)).unwrap_or_default();
+            let prompt = inquire::prompt_text(format!("Enter value for {}", v)).unwrap();
             (v.to_string(), prompt)
         })
         .collect::<Vec<_>>();
 
     let out_dir = args.out_dir.unwrap_or_else(|| PathBuf::from(name));
 
-    engine.render(&out_dir, sel.name.as_str(), &data)?;
+    engine.render(&out_dir, t_name, &data)?;
 
     Ok(())
 }
