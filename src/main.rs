@@ -52,7 +52,8 @@ fn main() -> color_eyre::Result<()> {
     let sel = if loaded_templates.len() == 1 {
         loaded_templates[0].clone()
     } else {
-        picker(loaded_templates)?
+        let theme = config.get_theme();
+        picker(loaded_templates, theme)?
     };
     println!("\r\n");
 
