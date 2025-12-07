@@ -1,16 +1,15 @@
-use std::{env, path::PathBuf, sync::LazyLock};
-
 use config::{Config, Environment, File};
 use glob::glob;
 use rat_theme4::{create_salsa_theme, palette::Palette, theme::SalsaTheme};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use std::{env, path::PathBuf, sync::LazyLock};
 
 use crate::{
     errors::Result,
     logging::{PROJECT_NAME, project_directory},
 };
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Settings {
     #[serde(default)]
     pub(self) source_dirs: Vec<PathBuf>,
@@ -33,14 +32,14 @@ pub(crate) fn get_config_dir() -> PathBuf {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Theme {
     InBuilt(String),
     Custom(Box<CustomTheme>),
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CustomTheme {
     pub name: String,
     pub theme: String,

@@ -46,7 +46,7 @@ impl Minimal {
         }
         self.dirs
             .iter()
-            .filter(|d| f.filter(d.name.clone()))
+            .filter(|d| f.filter(d.name().to_string()))
             .cloned()
             .collect::<Vec<_>>()
     }

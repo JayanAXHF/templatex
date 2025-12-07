@@ -20,9 +20,12 @@ use rat_widget::focus::FocusBuilder;
 use rat_widget::msgdialog::{MsgDialog, MsgDialogState};
 use rat_widget::statusline::{StatusLine, StatusLineState};
 use ratatui::buffer::Buffer;
-use ratatui::crossterm;
+use ratatui::crossterm::terminal::disable_raw_mode;
+use ratatui::crossterm::{self, execute};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::widgets::StatefulWidget;
+use std::io::stdout;
+use std::process;
 use std::time::{Duration, SystemTime};
 
 pub fn picker(
@@ -51,7 +54,7 @@ pub fn picker(
         error,
         &mut global,
         &mut state,
-        RunConfig::new(CrosstermTerminal::inline(10, true)?)
+        RunConfig::new(CrosstermTerminal::inline(12, true)?)
             .poll(PollCrossterm)
             .poll(PollRendered),
     )?;
@@ -193,6 +196,11 @@ pub fn event(
             let mut r = match &event {
                 ct_event!(resized) => Control::Changed,
                 ct_event!(key press CONTROL-'q') => Control::Quit,
+                ct_event!(key press CONTROL-'c') => {
+                    disable_raw_mode()?;
+                    execute!(stdout(), crossterm::cursor::Show)?;
+                    process::exit(0);
+                }
                 _ => Control::Continue,
             };
 

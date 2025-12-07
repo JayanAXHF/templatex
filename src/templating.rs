@@ -7,6 +7,7 @@ use getset::{CloneGetters, CopyGetters, Getters, MutGetters, Setters, WithSetter
 use glob::glob;
 use serde::Deserialize;
 use std::{
+    ffi::OsStr,
     fs,
     io::{self, Write},
     path::{Path, PathBuf},
@@ -50,6 +51,12 @@ pub struct Engine {
     #[allow(dead_code)]
     #[builder(setter(into))]
     template_dirs: Vec<PathBuf>,
+    #[builder(setter(into))]
+    #[allow(dead_code)]
+    exclude_filters: Option<Filter<String>>,
+    #[builder(setter(into))]
+    #[allow(dead_code)]
+    include_filters: Option<Filter<String>>,
     #[builder(setter(skip))]
     templates: Vec<Template>,
 }
@@ -78,6 +85,10 @@ impl EngineBuilder {
                 "No template directories provided"
             )));
         };
+        let mut exclude_filter = self.exclude_filters.clone().unwrap_or_default();
+        let exclude_filter = exclude_filter.as_mut();
+        let mut include_filter = self.include_filters.clone().unwrap_or_default();
+        let include_filter = include_filter.as_mut();
         let mut templates = Vec::new();
         for dir in template_dirs.clone() {
             let mut files = Vec::new();
@@ -89,10 +100,21 @@ impl EngineBuilder {
                 };
                 let ext = ext.display().to_string();
                 let ext = ext.as_str();
+                if let Some(exclude) = &exclude_filter
+                    && exclude.filter(f.display().to_string())
+                {
+                    return false;
+                }
+                if let Some(include) = &include_filter
+                    && include.filter(f.display().to_string())
+                {
+                    return true;
+                }
                 if IMAGE_FILTER.filter(ext) {
                     image_files.push(f.clone());
                     return false;
                 }
+
                 !(FILE_FILTER.filter(ext) || IMAGE_FILTER.filter(ext))
             });
             let mut tera = tera::Tera::default();
@@ -129,6 +151,8 @@ impl EngineBuilder {
         Ok(Engine {
             template_dirs,
             templates,
+            exclude_filters: None,
+            include_filters: None,
         })
     }
 }
@@ -138,6 +162,8 @@ impl Engine {
         Self {
             template_dirs,
             templates,
+            exclude_filters: None,
+            include_filters: None,
         }
     }
     pub fn get_template(&self, name: &str) -> Option<&Template> {
@@ -220,24 +246,43 @@ impl Engine {
 
 #[derive(Debug, Clone)]
 pub struct LoadedTemplateDir {
-    pub name: String,
-    pub description: Option<String>,
+    pub config: LoadedTemplateDirConfig,
     pub dir: PathBuf,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct LoadedTemplateDirConfig {
+    #[serde(default)]
     pub name: String,
     pub description: Option<String>,
+    #[serde(default)]
+    pub ignore: bool,
+    pub exclude: Option<Vec<String>>,
+    pub include: Option<Vec<String>>,
 }
 
 impl LoadedTemplateDir {
     pub fn new(name: String, description: Option<String>, dir: PathBuf) -> Self {
-        Self {
+        let config = LoadedTemplateDirConfig {
             name,
             description,
-            dir,
-        }
+            ignore: false,
+            exclude: None,
+            include: None,
+        };
+        Self { config, dir }
+    }
+    pub fn from_config(config: LoadedTemplateDirConfig, dir: PathBuf) -> Self {
+        Self { config, dir }
+    }
+    pub fn name(&self) -> &str {
+        self.config.name.as_str()
+    }
+    pub fn description(&self) -> Option<&str> {
+        self.config.description.as_deref()
+    }
+    pub fn dir(&self) -> &PathBuf {
+        &self.dir
     }
 }
 
@@ -251,7 +296,21 @@ impl LoadableDir for PathBuf {
             return Err(Error::IoError(io::ErrorKind::NotADirectory.into()));
         }
         let conf = self.join("templatex.toml");
-        if !conf.exists() {
+        debug!("{}", conf.display());
+        debug!(exists = ?conf.exists(), "File exists");
+        // if !conf.try_exists()? {
+        //     warn!("No templatex.toml found in {}", self.display());
+        //     let Some(dirname) = self.file_name() else {
+        //         return Err(Error::IoError(io::ErrorKind::InvalidFilename.into()));
+        //     };
+        //     return Ok(LoadedTemplateDir::new(
+        //         dirname.display().to_string(),
+        //         None,
+        //         self.to_path_buf(),
+        //     ));
+        // }
+        let Ok(conf) = std::fs::read_to_string(conf) else {
+            warn!("No templatex.toml found in {}", self.display());
             let Some(dirname) = self.file_name() else {
                 return Err(Error::IoError(io::ErrorKind::InvalidFilename.into()));
             };
@@ -260,14 +319,10 @@ impl LoadableDir for PathBuf {
                 None,
                 self.to_path_buf(),
             ));
-        }
-        let conf = std::fs::read_to_string(conf)?;
+        };
+        debug!(conf);
         let conf: LoadedTemplateDirConfig = toml::from_str(&conf)?;
-        Ok(LoadedTemplateDir::new(
-            conf.name,
-            conf.description,
-            self.to_path_buf(),
-        ))
+        Ok(LoadedTemplateDir::from_config(conf, self.to_path_buf()))
     }
 }
 
@@ -276,7 +331,7 @@ mod tests {
     use super::*;
     #[test]
     fn test() {
-        let engine = EngineBuilder::default()
+        let _engine = EngineBuilder::default()
             .template_dirs(vec![PathBuf::from("./templates")])
             .clone()
             .build()
