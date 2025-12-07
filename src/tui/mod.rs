@@ -5,6 +5,7 @@ pub mod ui;
 /// Uses only 10 lines for the UI.
 ///
 use self::ui::Minimal;
+use crate::config::Theme;
 use crate::templating::LoadedTemplateDir;
 use color_eyre::eyre::Report as Error;
 use rat_salsa::event::RenderedEvent;
@@ -12,7 +13,7 @@ use rat_salsa::poll::{PollCrossterm, PollRendered};
 use rat_salsa::terminal::CrosstermTerminal;
 use rat_salsa::timer::TimeOut;
 use rat_salsa::{Control, RunConfig, SalsaAppContext, SalsaContext, run_tui};
-use rat_theme4::create_theme;
+use rat_theme4::create_salsa_theme;
 use rat_theme4::theme::SalsaTheme;
 use rat_widget::event::{ConsumedEvent, Dialog, HandleEvent, Regular, ct_event};
 use rat_widget::focus::FocusBuilder;
@@ -24,9 +25,15 @@ use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::widgets::StatefulWidget;
 use std::time::{Duration, SystemTime};
 
-pub fn picker(dirs: Vec<LoadedTemplateDir>) -> Result<LoadedTemplateDir, Error> {
+pub fn picker(
+    dirs: Vec<LoadedTemplateDir>,
+    user_theme: Option<Theme>,
+) -> Result<LoadedTemplateDir, Error> {
     let config = Config::default();
-    let theme = create_theme("Imperial Shell");
+    let theme = match user_theme {
+        Some(t) => t.into(),
+        None => create_salsa_theme("Imperial Shell"),
+    };
     let mut global = Global::new(config, theme);
     let ui = Minimal {
         dirs: dirs.clone(),

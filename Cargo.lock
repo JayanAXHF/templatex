@@ -320,6 +320,7 @@ dependencies = [
  "itoa",
  "rustversion",
  "ryu",
+ "serde",
  "static_assertions",
 ]
 
@@ -1568,13 +1569,14 @@ dependencies = [
 
 [[package]]
 name = "rat-theme4"
-version = "4.0.3"
+version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41ed6ea92ea70423a7cde8aad99be1ddde5292d8df7dc811aa544e5dacdd671a"
+checksum = "7d31c14be38f1f4c8e139daf248aeda18878a04936931cdb990681d611f43520"
 dependencies = [
  "log",
  "rat-widget",
  "ratatui",
+ "serde",
 ]
 
 [[package]]
@@ -1615,6 +1617,7 @@ dependencies = [
  "itertools",
  "lru",
  "paste",
+ "serde",
  "strum",
  "unicode-segmentation",
  "unicode-truncate",
