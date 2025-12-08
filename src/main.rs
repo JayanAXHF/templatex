@@ -5,7 +5,7 @@ use ratatui::crossterm::terminal::disable_raw_mode;
 use templatex::{
     cli, config,
     filter::Filter,
-    logging::init,
+    logging::{disable_stdout_logs, enable_stdout_logs, init},
     templating::{self, LoadableDir},
     tui::picker,
 };
@@ -29,6 +29,10 @@ fn main() -> color_eyre::Result<()> {
         LevelFilter::INFO
     };
     init(level)?;
+
+    enable_stdout_logs(level)?;
+    tracing::info!("Starting up");
+    disable_stdout_logs()?;
 
     let template_dirs = match args.template_dir {
         Some(p) => vec![p],
@@ -64,6 +68,10 @@ fn main() -> color_eyre::Result<()> {
         })
         .collect::<Vec<_>>();
 
+    if loaded_templates.is_empty() {
+        tracing::error!("No templates found");
+        return Ok(());
+    }
     let sel = if loaded_templates.len() == 1 {
         loaded_templates[0].clone()
     } else {

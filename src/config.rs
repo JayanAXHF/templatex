@@ -73,7 +73,7 @@ impl From<Theme> for SalsaTheme {
 
 impl Settings {
     pub fn new() -> Result<Self> {
-        Self::with_source_dir(get_config_dir())
+        Self::with_source_dir(get_config_dir().join("config"))
     }
     pub fn with_source_dir(dir: PathBuf) -> Result<Self> {
         let s = Config::builder()
