@@ -186,7 +186,7 @@ impl Engine {
             let output_file = out_dir
                 .join("src")
                 .join(f.strip_prefix(&template_source_dir).unwrap());
-            info!("Rendering {}", output_file.display());
+            debug!("Rendering {}", output_file.display());
             let Some(prefix) = output_file.parent() else {
                 warn!("Failed to get parent of {}", output_file.display());
                 continue;
