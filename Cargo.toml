@@ -43,6 +43,8 @@ tracing = "0.1.43"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 walker = "1.0.1"
+better-panic = "0.3.0"
+human-panic = "2.0.4"
 
 [patch.crates-io]
 tera = {path = "./patches/tera/"}

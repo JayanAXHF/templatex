@@ -4,7 +4,7 @@ use clap::Parser;
 use color_eyre::eyre::eyre;
 use ratatui::crossterm::terminal::disable_raw_mode;
 use templatex::{
-    cli, config,
+    cli, config, errors,
     filter::Filter,
     logging::{disable_stdout_logs, enable_stdout_logs, init},
     templating::{self, LoadableDir},
@@ -13,6 +13,7 @@ use templatex::{
 use tracing::{debug, info, level_filters::LevelFilter};
 
 fn main() -> color_eyre::Result<()> {
+    errors::init()?;
     let cli::Cli { name, args } = cli::Cli::parse();
     let config = if let Some(cdir) = args.config_dir {
         config::Settings::with_source_dir(cdir)?
