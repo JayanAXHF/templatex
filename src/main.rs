@@ -10,7 +10,7 @@ use templatex::{
     templating::{self, LoadableDir},
     tui::picker,
 };
-use tracing::{debug, level_filters::LevelFilter};
+use tracing::{debug, info, level_filters::LevelFilter};
 
 fn main() -> color_eyre::Result<()> {
     let cli::Cli { name, args } = cli::Cli::parse();
@@ -32,6 +32,7 @@ fn main() -> color_eyre::Result<()> {
     init(level)?;
     enable_stdout_logs(level)?;
 
+    info!("Reading template directories");
     let template_dirs = match args.template_dir {
         Some(p) => p
             .read_dir()
@@ -61,6 +62,7 @@ fn main() -> color_eyre::Result<()> {
             .collect::<Vec<_>>(),
     };
 
+    info!("Loading templates");
     let loaded_templates = template_dirs
         .iter()
         .filter_map(|p| {
@@ -80,6 +82,7 @@ fn main() -> color_eyre::Result<()> {
         tracing::error!("No templates found");
         return Err(eyre!("No templates found"));
     }
+    info!("Loaded {} templates", loaded_templates.len());
     let sel = if loaded_templates.len() == 1 {
         loaded_templates[0].clone()
     } else {
@@ -119,6 +122,7 @@ fn main() -> color_eyre::Result<()> {
         .flat_map(|f| f.variables())
         .collect::<Vec<_>>();
 
+    info!("Enter values for the variables");
     let data = vars
         .iter()
         .map(|v| {
@@ -129,6 +133,7 @@ fn main() -> color_eyre::Result<()> {
 
     let out_dir = args.out_dir.unwrap_or_else(|| PathBuf::from(name));
 
+    info!("Rendering template");
     engine.render(&out_dir, t_name, &data)?;
 
     Ok(())
