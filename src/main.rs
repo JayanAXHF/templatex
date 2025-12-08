@@ -35,7 +35,17 @@ fn main() -> color_eyre::Result<()> {
     disable_stdout_logs()?;
 
     let template_dirs = match args.template_dir {
-        Some(p) => vec![p],
+        Some(p) => p
+            .read_dir()
+            .unwrap()
+            .filter_map(|e| {
+                let e = e.ok()?;
+                if e.file_type().ok()?.is_dir() {
+                    return Some(e.path());
+                }
+                None
+            })
+            .collect::<Vec<_>>(),
         None => sources
             .iter()
             .flat_map(|f| {
