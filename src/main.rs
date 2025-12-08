@@ -1,15 +1,16 @@
 use std::path::PathBuf;
 
 use clap::Parser;
+use color_eyre::eyre::eyre;
 use ratatui::crossterm::terminal::disable_raw_mode;
 use templatex::{
     cli, config,
     filter::Filter,
-    logging::init,
+    logging::{disable_stdout_logs, enable_stdout_logs, init},
     templating::{self, LoadableDir},
     tui::picker,
 };
-use tracing::{debug, level_filters::LevelFilter};
+use tracing::{debug, info, level_filters::LevelFilter};
 
 fn main() -> color_eyre::Result<()> {
     let cli::Cli { name, args } = cli::Cli::parse();
@@ -29,9 +30,21 @@ fn main() -> color_eyre::Result<()> {
         LevelFilter::INFO
     };
     init(level)?;
+    enable_stdout_logs(level)?;
 
+    info!("Reading template directories");
     let template_dirs = match args.template_dir {
-        Some(p) => vec![p],
+        Some(p) => p
+            .read_dir()
+            .unwrap()
+            .filter_map(|e| {
+                let e = e.ok()?;
+                if e.file_type().ok()?.is_dir() {
+                    return Some(e.path());
+                }
+                None
+            })
+            .collect::<Vec<_>>(),
         None => sources
             .iter()
             .flat_map(|f| {
@@ -49,6 +62,7 @@ fn main() -> color_eyre::Result<()> {
             .collect::<Vec<_>>(),
     };
 
+    info!("Loading templates");
     let loaded_templates = template_dirs
         .iter()
         .filter_map(|p| {
@@ -64,12 +78,21 @@ fn main() -> color_eyre::Result<()> {
         })
         .collect::<Vec<_>>();
 
+    if loaded_templates.is_empty() {
+        tracing::error!("No templates found");
+        return Err(eyre!("No templates found"));
+    }
+    info!("Loaded {} templates", loaded_templates.len());
     let sel = if loaded_templates.len() == 1 {
         loaded_templates[0].clone()
     } else {
         let theme = config.get_theme();
-        picker(loaded_templates, theme)?
+        disable_stdout_logs()?;
+        let selected = picker(loaded_templates, theme)?;
+        enable_stdout_logs(level)?;
+        selected
     };
+
     disable_raw_mode()?;
     println!("\r\n");
     let include_filters = sel
@@ -109,6 +132,7 @@ fn main() -> color_eyre::Result<()> {
 
     let out_dir = args.out_dir.unwrap_or_else(|| PathBuf::from(name));
 
+    info!("Rendering template");
     engine.render(&out_dir, t_name, &data)?;
 
     Ok(())

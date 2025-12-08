@@ -1,12 +1,17 @@
-use std::env;
+use std::fs::File;
 use std::path::PathBuf;
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock, OnceLock};
+use std::{env, fs};
 
 use color_eyre::Result;
 use directories::ProjectDirs;
 use tracing::level_filters::LevelFilter;
 use tracing_error::ErrorLayer;
-use tracing_subscriber::{EnvFilter, fmt, prelude::*};
+use tracing_subscriber::fmt::Layer;
+use tracing_subscriber::fmt::format::{DefaultFields, Format};
+use tracing_subscriber::layer::Layered;
+use tracing_subscriber::reload::Handle;
+use tracing_subscriber::{EnvFilter, Registry, fmt, prelude::*, reload};
 
 pub static PROJECT_NAME: LazyLock<String> =
     LazyLock::new(|| env!("CARGO_CRATE_NAME").to_uppercase().to_string());
@@ -33,29 +38,68 @@ pub(crate) fn project_directory() -> Option<ProjectDirs> {
     ProjectDirs::from("com", "jayanaxhf", env!("CARGO_PKG_NAME"))
 }
 
+/// This handle allows enabling/disabling stdout logs
+static STDOUT_FILTER_HANDLE: OnceLock<
+    Arc<Handle<EnvFilter, Layered<Layer<Registry, DefaultFields, Format, File>, Registry>>>,
+> = OnceLock::new();
+
+/// INITIALIZATION -------------------------------------------------------------
 pub fn init(level: LevelFilter) -> Result<()> {
     let directory = get_data_dir();
-    std::fs::create_dir_all(directory.clone())?;
-    let log_path = directory.join(LOG_FILE.clone());
-    println!("Logging to {}", log_path.display());
-    let log_file = std::fs::File::create(log_path)?;
-    let env_filter = EnvFilter::builder().with_default_directive(level.into());
-    // If the `RUST_LOG` environment variable is set, use that as the default, otherwise use the
-    // value of the `LOG_ENV` environment variable. If the `LOG_ENV` environment variable contains
-    // errors, then this will return an error.
-    let env_filter = env_filter
-        .try_from_env()
-        .or_else(|_| env_filter.with_env_var(LOG_ENV.clone()).from_env())?;
-    let file_subscriber = fmt::layer()
+    std::fs::create_dir_all(&directory)?;
+
+    let log_path = directory.join(&*LOG_FILE);
+    let log_file = File::create(log_path)?;
+
+    //
+    // FILE LAYER
+    //
+    let file_layer = fmt::layer()
+        .with_writer(log_file)
+        .with_ansi(false)
         .with_file(true)
         .with_line_number(true)
-        .with_writer(log_file)
+        .with_target(true);
+
+    //
+    // STDOUT LAYER
+    //
+    let stdout_layer = fmt::layer()
+        .with_ansi(true)
         .with_target(true)
-        .with_ansi(false)
-        .with_filter(env_filter.clone());
+        .with_line_number(true);
+
+    //
+    // Reloadable filter for the stdout layer
+    //
+    let (stdout_filter, filter_handle) = reload::Layer::new(EnvFilter::new(level.to_string()));
+    STDOUT_FILTER_HANDLE
+        .set(Arc::new(filter_handle))
+        .expect("Failed to set stdout filter handle");
+
+    //
+    // Store handle with erased type
+    //
     tracing_subscriber::registry()
-        .with(file_subscriber)
+        .with(file_layer)
+        .with(stdout_layer.with_filter(stdout_filter))
         .with(ErrorLayer::default())
         .try_init()?;
+
+    Ok(())
+}
+
+/// RUNTIME CONTROL -------------------------------------------------------------
+pub fn disable_stdout_logs() -> Result<()> {
+    if let Some(handle) = STDOUT_FILTER_HANDLE.get() {
+        handle.modify(|f| *f = EnvFilter::new(LevelFilter::OFF.to_string()))?;
+    }
+    Ok(())
+}
+
+pub fn enable_stdout_logs(level: LevelFilter) -> Result<()> {
+    if let Some(handle) = STDOUT_FILTER_HANDLE.get() {
+        handle.modify(|f| *f = EnvFilter::new(level.to_string()))?;
+    }
     Ok(())
 }
