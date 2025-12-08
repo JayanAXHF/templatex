@@ -73,17 +73,14 @@ impl From<Theme> for SalsaTheme {
 
 impl Settings {
     pub fn new() -> Result<Self> {
+        Self::with_source_dir(get_config_dir())
+    }
+    pub fn with_source_dir(dir: PathBuf) -> Result<Self> {
         let s = Config::builder()
             .add_source(
-                glob(
-                    &get_config_dir()
-                        .join("config")
-                        .join("*")
-                        .display()
-                        .to_string(),
-                )?
-                .map(|p| File::from(p.expect("Failed to read config file")))
-                .collect::<Vec<_>>(),
+                glob(&dir.join("*").display().to_string())?
+                    .map(|p| File::from(p.expect("Failed to read config file")))
+                    .collect::<Vec<_>>(),
             )
             .add_source(
                 Environment::with_prefix(&PROJECT_NAME)

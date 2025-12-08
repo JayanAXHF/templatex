@@ -22,4 +22,6 @@ pub struct Args {
     pub verbose: bool,
     #[clap(long)]
     pub very_verbose: bool,
+    #[clap(long)]
+    pub config_dir: Option<PathBuf>,
 }

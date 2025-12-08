@@ -13,7 +13,11 @@ use tracing::{debug, level_filters::LevelFilter};
 
 fn main() -> color_eyre::Result<()> {
     let cli::Cli { name, args } = cli::Cli::parse();
-    let config = config::Settings::new().unwrap();
+    let config = if let Some(cdir) = args.config_dir {
+        config::Settings::with_source_dir(cdir)?
+    } else {
+        config::Settings::new()?
+    };
     let sources = config.get_source_dirs();
     let level = if args.very_verbose {
         LevelFilter::TRACE
