@@ -122,7 +122,6 @@ fn main() -> color_eyre::Result<()> {
         .flat_map(|f| f.variables())
         .collect::<Vec<_>>();
 
-    info!("Enter values for the variables");
     let data = vars
         .iter()
         .map(|v| {
