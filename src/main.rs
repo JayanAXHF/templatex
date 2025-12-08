@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::Parser;
+use color_eyre::eyre::eyre;
 use ratatui::crossterm::terminal::disable_raw_mode;
 use templatex::{
     cli, config,
@@ -29,10 +30,7 @@ fn main() -> color_eyre::Result<()> {
         LevelFilter::INFO
     };
     init(level)?;
-
     enable_stdout_logs(level)?;
-    tracing::info!("Starting up");
-    disable_stdout_logs()?;
 
     let template_dirs = match args.template_dir {
         Some(p) => p
@@ -80,14 +78,18 @@ fn main() -> color_eyre::Result<()> {
 
     if loaded_templates.is_empty() {
         tracing::error!("No templates found");
-        return Ok(());
+        return Err(eyre!("No templates found"));
     }
     let sel = if loaded_templates.len() == 1 {
         loaded_templates[0].clone()
     } else {
         let theme = config.get_theme();
-        picker(loaded_templates, theme)?
+        disable_stdout_logs()?;
+        let selected = picker(loaded_templates, theme)?;
+        enable_stdout_logs(level)?;
+        selected
     };
+
     disable_raw_mode()?;
     println!("\r\n");
     let include_filters = sel
