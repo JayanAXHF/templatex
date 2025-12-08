@@ -64,7 +64,10 @@ pub fn init(level: LevelFilter) -> Result<()> {
     //
     // STDOUT LAYER
     //
-    let stdout_layer = fmt::layer().pretty().with_ansi(true);
+    let stdout_layer = fmt::layer()
+        .with_ansi(true)
+        .with_target(true)
+        .with_line_number(true);
 
     //
     // Reloadable filter for the stdout layer
