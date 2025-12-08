@@ -7,7 +7,6 @@ use getset::{CloneGetters, CopyGetters, Getters, MutGetters, Setters, WithSetter
 use glob::glob;
 use serde::Deserialize;
 use std::{
-    ffi::OsStr,
     fs,
     io::{self, Write},
     path::{Path, PathBuf},
