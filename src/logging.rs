@@ -1,7 +1,7 @@
+use std::env;
 use std::fs::File;
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, OnceLock};
-use std::{env, fs};
 
 use color_eyre::Result;
 use directories::ProjectDirs;
